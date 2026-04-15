@@ -1,0 +1,74 @@
+spring:
+  application:
+    name: carbonedge-api
+  profiles:
+    default: mysql
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+  jackson:
+    default-property-inclusion: non_null
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${MAIL_SMTP_STARTTLS_ENABLE:true}
+      mail.smtp.connectiontimeout: ${MAIL_SMTP_CONNECTION_TIMEOUT:5000}
+      mail.smtp.timeout: ${MAIL_SMTP_TIMEOUT:5000}
+      mail.smtp.writetimeout: ${MAIL_SMTP_WRITE_TIMEOUT:5000}
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+app:
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+  auth:
+    token-secret: ${APP_AUTH_TOKEN_SECRET:carbonedge-local-auth-secret-change-me}
+    token-ttl-minutes: ${APP_AUTH_TOKEN_TTL_MINUTES:1440}
+  customer:
+    verify-email-url-base: ${APP_CUSTOMER_VERIFY_EMAIL_URL_BASE:http://localhost:3000/verify-email}
+    mail-from: ${APP_CUSTOMER_MAIL_FROM:no-reply@example.com}
+    mail-subject: ${APP_CUSTOMER_MAIL_SUBJECT:Verify your email address}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: jdbc:h2:mem:carbonedge;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+---
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: ${DB_URL:jdbc:mysql://203.150.106.14:3306/carbon_edge?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Bangkok}
+    username: ${DB_USERNAME:carbon_edge_user}
+    password: ${DB_PASSWORD:0owa?@K079Bc}
+    driver-class-name: com.mysql.cj.jdbc.Driver

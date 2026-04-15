@@ -1,0 +1,2565 @@
+openapi: 3.1.0
+info:
+  title: Ecommerce Platform API
+  version: 1.0.0
+  description: |
+    Initial API specification for ecommerce backend built with Java Spring Boot.
+    This version focuses on Product resource only.
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+tags:
+  - name: Products
+    description: Product management APIs
+  - name: Categories
+    description: Category management APIs
+  - name: Cart
+    description: Shopping cart APIs
+  - name: Customers
+    description: Customer management APIs
+  - name: Merchants
+    description: Merchant management APIs
+
+paths:
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Get product list
+      description: Retrieve paginated list of products with optional filters
+      operationId: listProducts
+      parameters:
+        - name: page
+          in: query
+          description: Page number (0-based)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: keyword
+          in: query
+          description: Search by product name, SKU, or description
+          required: false
+          schema:
+            type: string
+        - name: categoryId
+          in: query
+          description: Filter by category ID
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          description: Filter by product status
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductStatus'
+        - name: inStock
+          in: query
+          description: Filter by stock availability
+          required: false
+          schema:
+            type: boolean
+        - name: featured
+          in: query
+          description: Filter featured products
+          required: false
+          schema:
+            type: boolean
+        - name: sort
+          in: query
+          description: Sort format เช่น createdAt,desc หรือ price,asc
+          required: false
+          schema:
+            type: string
+            example: createdAt,desc
+      responses:
+        '200':
+          description: Product list retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPageResponse'
+
+    post:
+      tags:
+        - Products
+      summary: Create product
+      description: Create a new product
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: SKU or slug already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /products/{productId}:
+    get:
+      tags:
+        - Products
+      summary: Get product detail
+      description: Retrieve product by ID
+      operationId: getProductById
+      parameters:
+        - $ref: '#/components/parameters/ProductIdPathParam'
+      responses:
+        '200':
+          description: Product detail retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Products
+      summary: Update product
+      description: Update existing product by ID
+      operationId: updateProduct
+      parameters:
+        - $ref: '#/components/parameters/ProductIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: SKU or slug already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Products
+      summary: Delete product
+      description: Soft delete or remove product by ID
+      operationId: deleteProduct
+      parameters:
+        - $ref: '#/components/parameters/ProductIdPathParam'
+      responses:
+        '204':
+          description: Product deleted successfully
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /categories:
+    get:
+      tags:
+        - Categories
+      summary: Get category list
+      description: Retrieve all categories
+      operationId: listCategories
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter by category status
+          schema:
+            $ref: '#/components/schemas/CategoryStatus'
+        - name: parentId
+          in: query
+          required: false
+          description: Filter by parent category ID
+          schema:
+            type: integer
+            format: int64
+        - name: keyword
+          in: query
+          required: false
+          description: Search by category name or slug
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Category list retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponse'
+
+    post:
+      tags:
+        - Categories
+      summary: Create category
+      description: Create a new category
+      operationId: createCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+      responses:
+        '201':
+          description: Category created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Category slug already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /categories/{categoryId}:
+    get:
+      tags:
+        - Categories
+      summary: Get category detail
+      description: Retrieve category by ID
+      operationId: getCategoryById
+      parameters:
+        - $ref: '#/components/parameters/CategoryIdPathParam'
+      responses:
+        '200':
+          description: Category retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+        '404':
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Categories
+      summary: Update category
+      description: Update category by ID
+      operationId: updateCategory
+      parameters:
+        - $ref: '#/components/parameters/CategoryIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategoryRequest'
+      responses:
+        '200':
+          description: Category updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Category slug already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Categories
+      summary: Delete category
+      description: Delete category by ID
+      operationId: deleteCategory
+      parameters:
+        - $ref: '#/components/parameters/CategoryIdPathParam'
+      responses:
+        '204':
+          description: Category deleted successfully
+        '404':
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /carts:
+    post:
+      tags:
+        - Cart
+      summary: Create cart
+      description: Create a new shopping cart
+      operationId: createCart
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCartRequest'
+      responses:
+        '201':
+          description: Cart created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+
+  /carts/{cartId}:
+    get:
+      tags:
+        - Cart
+      summary: Get cart detail
+      description: Retrieve cart by ID
+      operationId: getCartById
+      parameters:
+        - $ref: '#/components/parameters/CartIdPathParam'
+      responses:
+        '200':
+          description: Cart retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '404':
+          description: Cart not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Cart
+      summary: Delete cart
+      description: Delete or clear cart by ID
+      operationId: deleteCart
+      parameters:
+        - $ref: '#/components/parameters/CartIdPathParam'
+      responses:
+        '204':
+          description: Cart deleted successfully
+        '404':
+          description: Cart not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /carts/{cartId}/items:
+    post:
+      tags:
+        - Cart
+      summary: Add item to cart
+      description: Add a product to shopping cart
+      operationId: addCartItem
+      parameters:
+        - $ref: '#/components/parameters/CartIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCartItemRequest'
+      responses:
+        '200':
+          description: Item added to cart successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Cart or product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /carts/{cartId}/items/{cartItemId}:
+    put:
+      tags:
+        - Cart
+      summary: Update cart item
+      description: Update quantity of cart item
+      operationId: updateCartItem
+      parameters:
+        - $ref: '#/components/parameters/CartIdPathParam'
+        - $ref: '#/components/parameters/CartItemIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCartItemRequest'
+      responses:
+        '200':
+          description: Cart item updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Cart or cart item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Cart
+      summary: Remove cart item
+      description: Remove item from cart
+      operationId: removeCartItem
+      parameters:
+        - $ref: '#/components/parameters/CartIdPathParam'
+        - $ref: '#/components/parameters/CartItemIdPathParam'
+      responses:
+        '200':
+          description: Cart item removed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '404':
+          description: Cart or cart item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /customers:
+    post:
+      tags:
+        - Customers
+      summary: Create customer
+      description: Register a new customer
+      operationId: createCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+      responses:
+        '201':
+          description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email or phone number already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - Customers
+      summary: Get customer list
+      description: Retrieve paginated list of customers
+      operationId: listCustomers
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: keyword
+          in: query
+          required: false
+          description: Search by email, phone number, first name, last name, or display name
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CustomerStatus'
+        - name: isEmailVerified
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: isPhoneVerified
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Customer list retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerPageResponse'
+
+  /customers/{customerId}:
+    get:
+      tags:
+        - Customers
+      summary: Get customer detail
+      description: Retrieve customer by ID
+      operationId: getCustomerById
+      parameters:
+        - $ref: '#/components/parameters/CustomerIdPathParam'
+      responses:
+        '200':
+          description: Customer retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Customers
+      summary: Update customer
+      description: Update customer by ID
+      operationId: updateCustomer
+      parameters:
+        - $ref: '#/components/parameters/CustomerIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomerRequest'
+      responses:
+        '200':
+          description: Customer updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email or phone number already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Customers
+      summary: Delete customer
+      description: Soft delete or deactivate customer by ID
+      operationId: deleteCustomer
+      parameters:
+        - $ref: '#/components/parameters/CustomerIdPathParam'
+      responses:
+        '204':
+          description: Customer deleted successfully
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /customers/{customerId}/addresses:
+    get:
+      tags:
+        - Customers
+      summary: Get customer addresses
+      description: Retrieve all addresses of a customer
+      operationId: listCustomerAddresses
+      parameters:
+        - $ref: '#/components/parameters/CustomerIdPathParam'
+      responses:
+        '200':
+          description: Customer addresses retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerAddressListResponse'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Customers
+      summary: Create customer address
+      description: Add a new address to customer
+      operationId: createCustomerAddress
+      parameters:
+        - $ref: '#/components/parameters/CustomerIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerAddressRequest'
+      responses:
+        '201':
+          description: Customer address created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerAddressResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /customers/{customerId}/addresses/{addressId}:
+    put:
+      tags:
+        - Customers
+      summary: Update customer address
+      description: Update customer address by ID
+      operationId: updateCustomerAddress
+      parameters:
+        - $ref: '#/components/parameters/CustomerIdPathParam'
+        - $ref: '#/components/parameters/AddressIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomerAddressRequest'
+      responses:
+        '200':
+          description: Customer address updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerAddressResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Customer or address not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Customers
+      summary: Delete customer address
+      description: Delete customer address by ID
+      operationId: deleteCustomerAddress
+      parameters:
+        - $ref: '#/components/parameters/CustomerIdPathParam'
+        - $ref: '#/components/parameters/AddressIdPathParam'
+      responses:
+        '204':
+          description: Customer address deleted successfully
+        '404':
+          description: Customer or address not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /merchants:
+    post:
+      tags:
+        - Merchants
+      summary: Create merchant
+      description: Create a new merchant
+      operationId: createMerchant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMerchantRequest'
+      responses:
+        '201':
+          description: Merchant created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Merchant code, slug, email, or tax ID already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - Merchants
+      summary: Get merchant list
+      description: Retrieve paginated list of merchants
+      operationId: listMerchants
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: keyword
+          in: query
+          required: false
+          description: Search by merchant code, shop name, legal name, email, or tax ID
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/MerchantStatus'
+        - name: businessType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/MerchantBusinessType'
+        - name: isOfficial
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Merchant list retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantPageResponse'
+
+  /merchants/{merchantId}:
+    get:
+      tags:
+        - Merchants
+      summary: Get merchant detail
+      description: Retrieve merchant by ID
+      operationId: getMerchantById
+      parameters:
+        - $ref: '#/components/parameters/MerchantIdPathParam'
+      responses:
+        '200':
+          description: Merchant retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantResponse'
+        '404':
+          description: Merchant not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Merchants
+      summary: Update merchant
+      description: Update merchant by ID
+      operationId: updateMerchant
+      parameters:
+        - $ref: '#/components/parameters/MerchantIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMerchantRequest'
+      responses:
+        '200':
+          description: Merchant updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Merchant not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Merchant code, slug, email, or tax ID already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Merchants
+      summary: Delete merchant
+      description: Soft delete or deactivate merchant by ID
+      operationId: deleteMerchant
+      parameters:
+        - $ref: '#/components/parameters/MerchantIdPathParam'
+      responses:
+        '204':
+          description: Merchant deleted successfully
+        '404':
+          description: Merchant not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /merchants/{merchantId}/addresses:
+    get:
+      tags:
+        - Merchants
+      summary: Get merchant addresses
+      description: Retrieve all addresses of a merchant
+      operationId: listMerchantAddresses
+      parameters:
+        - $ref: '#/components/parameters/MerchantIdPathParam'
+      responses:
+        '200':
+          description: Merchant addresses retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantAddressListResponse'
+        '404':
+          description: Merchant not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Merchants
+      summary: Create merchant address
+      description: Add a new address to merchant
+      operationId: createMerchantAddress
+      parameters:
+        - $ref: '#/components/parameters/MerchantIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMerchantAddressRequest'
+      responses:
+        '201':
+          description: Merchant address created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantAddressResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Merchant not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /merchants/{merchantId}/addresses/{addressId}:
+    put:
+      tags:
+        - Merchants
+      summary: Update merchant address
+      description: Update merchant address by ID
+      operationId: updateMerchantAddress
+      parameters:
+        - $ref: '#/components/parameters/MerchantIdPathParam'
+        - $ref: '#/components/parameters/AddressIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMerchantAddressRequest'
+      responses:
+        '200':
+          description: Merchant address updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantAddressResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Merchant or address not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Merchants
+      summary: Delete merchant address
+      description: Delete merchant address by ID
+      operationId: deleteMerchantAddress
+      parameters:
+        - $ref: '#/components/parameters/MerchantIdPathParam'
+        - $ref: '#/components/parameters/AddressIdPathParam'
+      responses:
+        '204':
+          description: Merchant address deleted successfully
+        '404':
+          description: Merchant or address not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  parameters:
+    ProductIdPathParam:
+      name: productId
+      in: path
+      required: true
+      description: Product ID
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    CategoryIdPathParam:
+      name: categoryId
+      in: path
+      required: true
+      description: Category ID
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    CartIdPathParam:
+      name: cartId
+      in: path
+      required: true
+      description: Cart ID
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    CartItemIdPathParam:
+      name: cartItemId
+      in: path
+      required: true
+      description: Cart item ID
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    CustomerIdPathParam:
+      name: customerId
+      in: path
+      required: true
+      description: Customer ID
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    MerchantIdPathParam:
+      name: merchantId
+      in: path
+      required: true
+      description: Merchant ID
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    AddressIdPathParam:
+      name: addressId
+      in: path
+      required: true
+      description: Address ID
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+  schemas:
+    ProductStatus:
+      type: string
+      description: Product publishing status
+      enum:
+        - DRAFT
+        - ACTIVE
+        - INACTIVE
+        - OUT_OF_STOCK
+        - ARCHIVED
+
+    ProductImage:
+      type: object
+      required:
+        - url
+        - sortOrder
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 101
+        url:
+          type: string
+          format: uri
+          example: https://cdn.example.com/products/p001/main.jpg
+        altText:
+          type: string
+          example: Front view of product
+        isPrimary:
+          type: boolean
+          example: true
+        sortOrder:
+          type: integer
+          minimum: 0
+          example: 0
+
+    Product:
+      type: object
+      required:
+        - id
+        - sku
+        - name
+        - slug
+        - price
+        - currency
+        - stockQuantity
+        - inStock
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        sku:
+          type: string
+          maxLength: 100
+          example: SKU-TSHIRT-001
+        name:
+          type: string
+          maxLength: 255
+          example: Premium Oversized T-Shirt
+        slug:
+          type: string
+          maxLength: 255
+          example: premium-oversized-t-shirt
+        shortDescription:
+          type: string
+          maxLength: 500
+          example: Soft cotton oversized t-shirt
+        description:
+          type: string
+          example: Premium quality oversized t-shirt made from 100% cotton.
+        categoryName:
+          type: string
+          example: Pet Perfume
+        brand:
+          type: string
+          maxLength: 100
+          example: MyBrand
+        categoryId:
+          type: integer
+          format: int64
+          example: 10
+        price:
+          type: number
+          format: double
+          minimum: 0
+          example: 790.00
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: THB
+        stockQuantity:
+          type: integer
+          minimum: 0
+          example: 120
+        inStock:
+          type: boolean
+          example: true
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+        isFeatured:
+          type: boolean
+          example: false
+        thumbnailUrl:
+          type: string
+          format: uri
+          example: https://cdn.example.com/products/p001/thumb.jpg
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductImage'
+        tags:
+          type: array
+          items:
+            type: string
+          example:
+            - clothing
+            - t-shirt
+            - bestseller
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-03-28T10:30:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2026-03-28T12:00:00Z
+
+    CreateProductRequest:
+      type: object
+      required:
+        - sku
+        - name
+        - slug
+        - price
+        - currency
+        - stockQuantity
+        - status
+      properties:
+        sku:
+          type: string
+          maxLength: 100
+          example: SKU-TSHIRT-001
+        name:
+          type: string
+          maxLength: 255
+          example: Premium Oversized T-Shirt
+        slug:
+          type: string
+          maxLength: 255
+          example: premium-oversized-t-shirt
+        shortDescription:
+          type: string
+          maxLength: 500
+        description:
+          type: string
+        brand:
+          type: string
+          maxLength: 100
+        categoryId:
+          type: integer
+          format: int64
+        price:
+          type: number
+          format: double
+          minimum: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: THB
+        stockQuantity:
+          type: integer
+          minimum: 0
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+        isFeatured:
+          type: boolean
+          default: false
+        thumbnailUrl:
+          type: string
+          format: uri
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductImage'
+        tags:
+          type: array
+          items:
+            type: string
+
+    UpdateProductRequest:
+      type: object
+      properties:
+        sku:
+          type: string
+          maxLength: 100
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+        shortDescription:
+          type: string
+          maxLength: 500
+        description:
+          type: string
+        brand:
+          type: string
+          maxLength: 100
+        categoryId:
+          type: integer
+          format: int64
+        price:
+          type: number
+          format: double
+          minimum: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        stockQuantity:
+          type: integer
+          minimum: 0
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+        isFeatured:
+          type: boolean
+        thumbnailUrl:
+          type: string
+          format: uri
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductImage'
+        tags:
+          type: array
+          items:
+            type: string
+
+    ProductResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Product'
+
+    ProductPageResponse:
+      type: object
+      required:
+        - data
+        - page
+        - size
+        - totalElements
+        - totalPages
+        - hasNext
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          example: 125
+
+        totalPages:
+          type: integer
+          example: 7
+        hasNext:
+          type: boolean
+          example: true
+    CategoryStatus:
+      type: string
+      description: Category status
+      enum:
+        - ACTIVE
+        - INACTIVE
+        - ARCHIVED
+
+    Category:
+      type: object
+      required:
+        - id
+        - name
+        - slug
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          maxLength: 255
+          example: Pet Perfume
+        slug:
+          type: string
+          maxLength: 255
+          example: pet-perfume
+        description:
+          type: string
+          example: Perfume products for dogs and cats
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+          example: null
+        imageUrl:
+          type: string
+          format: uri
+          example: https://cdn.example.com/categories/pet-perfume.jpg
+        status:
+          $ref: '#/components/schemas/CategoryStatus'
+        sortOrder:
+          type: integer
+          minimum: 0
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-04-03T10:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2026-04-03T10:00:00Z
+
+    CreateCategoryRequest:
+      type: object
+      required:
+        - name
+        - slug
+        - status
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+        imageUrl:
+          type: string
+          format: uri
+        status:
+          $ref: '#/components/schemas/CategoryStatus'
+        sortOrder:
+          type: integer
+          minimum: 0
+          default: 0
+
+    UpdateCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+        imageUrl:
+          type: string
+          format: uri
+        status:
+          $ref: '#/components/schemas/CategoryStatus'
+        sortOrder:
+          type: integer
+          minimum: 0
+
+    CategoryResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Category'
+
+    CategoryListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+
+    CartStatus:
+      type: string
+      description: Cart status
+      enum:
+        - ACTIVE
+        - CHECKED_OUT
+        - ABANDONED
+
+    CartItem:
+      type: object
+      required:
+        - id
+        - productId
+        - productName
+        - sku
+        - quantity
+        - unitPrice
+        - lineTotal
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        productId:
+          type: integer
+          format: int64
+          example: 101
+        productName:
+          type: string
+          example: Paw de Fume Cloudy
+        sku:
+          type: string
+          example: PDF-CLOUDY-30ML
+        thumbnailUrl:
+          type: string
+          format: uri
+          example: https://cdn.example.com/products/cloudy-thumb.jpg
+        quantity:
+          type: integer
+          minimum: 1
+          example: 2
+        unitPrice:
+          type: number
+          format: double
+          minimum: 0
+          example: 290.00
+        lineTotal:
+          type: number
+          format: double
+          minimum: 0
+          example: 580.00
+
+    Cart:
+      type: object
+      required:
+        - id
+        - status
+        - items
+        - subtotal
+        - discountAmount
+        - totalAmount
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1001
+        customerId:
+          type: integer
+          format: int64
+          nullable: true
+          example: 5001
+        status:
+          $ref: '#/components/schemas/CartStatus'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        subtotal:
+          type: number
+          format: double
+          minimum: 0
+          example: 580.00
+        discountAmount:
+          type: number
+          format: double
+          minimum: 0
+          example: 50.00
+        totalAmount:
+          type: number
+          format: double
+          minimum: 0
+          example: 530.00
+        totalItems:
+          type: integer
+          minimum: 0
+          example: 2
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-04-03T10:15:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2026-04-03T10:20:00Z
+
+    CreateCartRequest:
+      type: object
+      properties:
+        customerId:
+          type: integer
+          format: int64
+          nullable: true
+          example: 5001
+
+    AddCartItemRequest:
+      type: object
+      required:
+        - productId
+        - quantity
+      properties:
+        productId:
+          type: integer
+          format: int64
+          example: 101
+        quantity:
+          type: integer
+          minimum: 1
+          example: 1
+
+    UpdateCartItemRequest:
+      type: object
+      required:
+        - quantity
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+          example: 3
+
+    CartResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Cart'
+
+    CustomerStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+        - SUSPENDED
+        - PENDING_VERIFICATION
+
+    Gender:
+      type: string
+      enum:
+        - MALE
+        - FEMALE
+        - OTHER
+        - PREFER_NOT_TO_SAY
+
+    Customer:
+      type: object
+      required:
+        - id
+        - email
+        - firstName
+        - lastName
+        - status
+        - isEmailVerified
+        - isPhoneVerified
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1001
+        email:
+          type: string
+          format: email
+          example: customer@example.com
+        phoneNumber:
+          type: string
+          example: 0812345678
+        firstName:
+          type: string
+          maxLength: 100
+          example: Karn
+        lastName:
+          type: string
+          maxLength: 100
+          example: Anchisa
+        displayName:
+          type: string
+          maxLength: 150
+          example: Karn
+        dateOfBirth:
+          type: string
+          format: date
+          nullable: true
+        gender:
+          $ref: '#/components/schemas/Gender'
+        status:
+          $ref: '#/components/schemas/CustomerStatus'
+        isEmailVerified:
+          type: boolean
+          example: true
+        isPhoneVerified:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-04-03T10:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2026-04-03T10:10:00Z
+
+    CreateCustomerRequest:
+      type: object
+      required:
+        - email
+        - firstName
+        - lastName
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: customer@example.com
+        phoneNumber:
+          type: string
+          example: 0812345678
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: StrongPassword123!
+        firstName:
+          type: string
+          maxLength: 100
+          example: Karn
+        lastName:
+          type: string
+          maxLength: 100
+          example: Anchisa
+        displayName:
+          type: string
+          maxLength: 150
+          example: Karn
+        dateOfBirth:
+          type: string
+          format: date
+          nullable: true
+        gender:
+          $ref: '#/components/schemas/Gender'
+
+    UpdateCustomerRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        displayName:
+          type: string
+          maxLength: 150
+        dateOfBirth:
+          type: string
+          format: date
+          nullable: true
+        gender:
+          $ref: '#/components/schemas/Gender'
+        status:
+          $ref: '#/components/schemas/CustomerStatus'
+        isEmailVerified:
+          type: boolean
+        isPhoneVerified:
+          type: boolean
+
+    CustomerResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Customer'
+
+    CustomerPageResponse:
+      type: object
+      required:
+        - data
+        - page
+        - size
+        - totalElements
+        - totalPages
+        - hasNext
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          example: 125
+        totalPages:
+          type: integer
+          example: 7
+        hasNext:
+          type: boolean
+          example: true
+
+    CustomerAddress:
+      type: object
+      required:
+        - id
+        - customerId
+        - recipientName
+        - recipientPhone
+        - line1
+        - district
+        - province
+        - postalCode
+        - countryCode
+        - isDefault
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        customerId:
+          type: integer
+          format: int64
+          example: 1001
+        label:
+          type: string
+          maxLength: 100
+          example: Home
+        recipientName:
+          type: string
+          maxLength: 255
+          example: Anchisa Prechadech
+        recipientPhone:
+          type: string
+          example: 0812345678
+        line1:
+          type: string
+          maxLength: 255
+          example: 99 ถนนสุขุมวิท
+        line2:
+          type: string
+          maxLength: 255
+          nullable: true
+        subDistrict:
+          type: string
+          maxLength: 150
+          example: คลองตันเหนือ
+        district:
+          type: string
+          maxLength: 150
+          example: วัฒนา
+        province:
+          type: string
+          maxLength: 150
+          example: กรุงเทพมหานคร
+        postalCode:
+          type: string
+          maxLength: 20
+          example: 10110
+        countryCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+          example: TH
+        isDefault:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-04-03T10:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2026-04-03T10:05:00Z
+
+    CreateCustomerAddressRequest:
+      type: object
+      required:
+        - recipientName
+        - recipientPhone
+        - line1
+        - district
+        - province
+        - postalCode
+        - countryCode
+      properties:
+        label:
+          type: string
+          maxLength: 100
+          example: Home
+        recipientName:
+          type: string
+          maxLength: 255
+          example: Anchisa Prechadech
+        recipientPhone:
+          type: string
+          example: 0812345678
+        line1:
+          type: string
+          maxLength: 255
+          example: 99 ถนนสุขุมวิท
+        line2:
+          type: string
+          maxLength: 255
+          nullable: true
+        subDistrict:
+          type: string
+          maxLength: 150
+          example: คลองตันเหนือ
+        district:
+          type: string
+          maxLength: 150
+          example: วัฒนา
+        province:
+          type: string
+          maxLength: 150
+          example: กรุงเทพมหานคร
+        postalCode:
+          type: string
+          maxLength: 20
+          example: 10110
+        countryCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+          example: TH
+        isDefault:
+          type: boolean
+          default: false
+
+    UpdateCustomerAddressRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 100
+        recipientName:
+          type: string
+          maxLength: 255
+        recipientPhone:
+          type: string
+        line1:
+          type: string
+          maxLength: 255
+        line2:
+          type: string
+          maxLength: 255
+          nullable: true
+        subDistrict:
+          type: string
+          maxLength: 150
+        district:
+          type: string
+          maxLength: 150
+        province:
+          type: string
+          maxLength: 150
+        postalCode:
+          type: string
+          maxLength: 20
+        countryCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+        isDefault:
+          type: boolean
+
+    CustomerAddressResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/CustomerAddress'
+
+    CustomerAddressListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerAddress'
+
+    MerchantStatus:
+      type: string
+      enum:
+        - PENDING_APPROVAL
+        - ACTIVE
+        - SUSPENDED
+        - REJECTED
+        - INACTIVE
+
+    MerchantBusinessType:
+      type: string
+      enum:
+        - INDIVIDUAL
+        - COMPANY
+        - BRAND_OWNER
+        - DISTRIBUTOR
+
+    Merchant:
+      type: object
+      required:
+        - id
+        - merchantCode
+        - shopName
+        - shopSlug
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 2001
+        merchantCode:
+          type: string
+          maxLength: 100
+          example: MRC-0001
+        shopName:
+          type: string
+          maxLength: 255
+          example: Paw de Fume Official
+        shopSlug:
+          type: string
+          maxLength: 255
+          example: paw-de-fume-official
+        legalName:
+          type: string
+          maxLength: 255
+          example: Paw de Fume Co., Ltd.
+        taxId:
+          type: string
+          maxLength: 50
+          example: 0105559999999
+        email:
+          type: string
+          format: email
+          example: hello@pawdefume.com
+        phoneNumber:
+          type: string
+          example: 0899999999
+        supportEmail:
+          type: string
+          format: email
+          example: support@pawdefume.com
+        supportPhone:
+          type: string
+          example: 0899999999
+        description:
+          type: string
+          example: Premium perfume for dogs and cats
+        logoUrl:
+          type: string
+          format: uri
+          example: https://cdn.example.com/merchants/paw-de-fume/logo.jpg
+        coverImageUrl:
+          type: string
+          format: uri
+          example: https://cdn.example.com/merchants/paw-de-fume/cover.jpg
+        businessType:
+          $ref: '#/components/schemas/MerchantBusinessType'
+        registeredCountry:
+          type: string
+          minLength: 2
+          maxLength: 2
+          example: TH
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: THB
+        commissionRate:
+          type: number
+          format: double
+          minimum: 0
+          example: 10.0
+        ratingAverage:
+          type: number
+          format: double
+          minimum: 0
+          example: 4.8
+        isOfficial:
+          type: boolean
+          example: true
+        status:
+          $ref: '#/components/schemas/MerchantStatus'
+        verifiedAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2026-04-03T12:00:00Z
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-04-03T10:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2026-04-03T10:10:00Z
+
+    CreateMerchantRequest:
+      type: object
+      required:
+        - merchantCode
+        - shopName
+        - shopSlug
+        - status
+      properties:
+        merchantCode:
+          type: string
+          maxLength: 100
+          example: MRC-0001
+        shopName:
+          type: string
+          maxLength: 255
+          example: Paw de Fume Official
+        shopSlug:
+          type: string
+          maxLength: 255
+          example: paw-de-fume-official
+        legalName:
+          type: string
+          maxLength: 255
+        taxId:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+        supportEmail:
+          type: string
+          format: email
+        supportPhone:
+          type: string
+        description:
+          type: string
+        logoUrl:
+          type: string
+          format: uri
+        coverImageUrl:
+          type: string
+          format: uri
+        businessType:
+          $ref: '#/components/schemas/MerchantBusinessType'
+        registeredCountry:
+          type: string
+          minLength: 2
+          maxLength: 2
+          example: TH
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: THB
+        commissionRate:
+          type: number
+          format: double
+          minimum: 0
+        isOfficial:
+          type: boolean
+          default: false
+        status:
+          $ref: '#/components/schemas/MerchantStatus'
+
+    UpdateMerchantRequest:
+      type: object
+      properties:
+        merchantCode:
+          type: string
+          maxLength: 100
+        shopName:
+          type: string
+          maxLength: 255
+        shopSlug:
+          type: string
+          maxLength: 255
+        legalName:
+          type: string
+          maxLength: 255
+        taxId:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+        supportEmail:
+          type: string
+          format: email
+        supportPhone:
+          type: string
+        description:
+          type: string
+        logoUrl:
+          type: string
+          format: uri
+        coverImageUrl:
+          type: string
+          format: uri
+        businessType:
+          $ref: '#/components/schemas/MerchantBusinessType'
+        registeredCountry:
+          type: string
+          minLength: 2
+          maxLength: 2
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        commissionRate:
+          type: number
+          format: double
+          minimum: 0
+        ratingAverage:
+          type: number
+          format: double
+          minimum: 0
+        isOfficial:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/MerchantStatus'
+        verifiedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    MerchantResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Merchant'
+
+    MerchantPageResponse:
+      type: object
+      required:
+        - data
+        - page
+        - size
+        - totalElements
+        - totalPages
+        - hasNext
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Merchant'
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          example: 50
+        totalPages:
+          type: integer
+          example: 3
+        hasNext:
+          type: boolean
+          example: true
+
+    MerchantAddressType:
+      type: string
+      enum:
+        - OFFICE
+        - WAREHOUSE
+        - BILLING
+        - RETURN
+
+    MerchantAddress:
+      type: object
+      required:
+        - id
+        - merchantId
+        - addressType
+        - line1
+        - district
+        - province
+        - postalCode
+        - countryCode
+        - isDefault
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        merchantId:
+          type: integer
+          format: int64
+          example: 2001
+        addressType:
+          $ref: '#/components/schemas/MerchantAddressType'
+        recipientName:
+          type: string
+          maxLength: 255
+          example: Paw de Fume Official
+        recipientPhone:
+          type: string
+          example: 0899999999
+        line1:
+          type: string
+          maxLength: 255
+          example: 88 ถนนสุขุมวิท
+        line2:
+          type: string
+          maxLength: 255
+          nullable: true
+        subDistrict:
+          type: string
+          maxLength: 150
+          example: พระโขนง
+        district:
+          type: string
+          maxLength: 150
+          example: คลองเตย
+        province:
+          type: string
+          maxLength: 150
+          example: กรุงเทพมหานคร
+        postalCode:
+          type: string
+          maxLength: 20
+          example: 10110
+        countryCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+          example: TH
+        isDefault:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-04-03T10:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2026-04-03T10:05:00Z
+
+    CreateMerchantAddressRequest:
+      type: object
+      required:
+        - addressType
+        - line1
+        - district
+        - province
+        - postalCode
+        - countryCode
+      properties:
+        addressType:
+          $ref: '#/components/schemas/MerchantAddressType'
+        recipientName:
+          type: string
+          maxLength: 255
+          example: Paw de Fume Official
+        recipientPhone:
+          type: string
+          example: 0899999999
+        line1:
+          type: string
+          maxLength: 255
+          example: 88 ถนนสุขุมวิท
+        line2:
+          type: string
+          maxLength: 255
+          nullable: true
+        subDistrict:
+          type: string
+          maxLength: 150
+          example: พระโขนง
+        district:
+          type: string
+          maxLength: 150
+          example: คลองเตย
+        province:
+          type: string
+          maxLength: 150
+          example: กรุงเทพมหานคร
+        postalCode:
+          type: string
+          maxLength: 20
+          example: 10110
+        countryCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+          example: TH
+        isDefault:
+          type: boolean
+          default: false
+
+    UpdateMerchantAddressRequest:
+      type: object
+      properties:
+        addressType:
+          $ref: '#/components/schemas/MerchantAddressType'
+        recipientName:
+          type: string
+          maxLength: 255
+        recipientPhone:
+          type: string
+        line1:
+          type: string
+          maxLength: 255
+        line2:
+          type: string
+          maxLength: 255
+          nullable: true
+        subDistrict:
+          type: string
+          maxLength: 150
+        district:
+          type: string
+          maxLength: 150
+        province:
+          type: string
+          maxLength: 150
+        postalCode:
+          type: string
+          maxLength: 20
+        countryCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+        isDefault:
+          type: boolean
+
+    MerchantAddressResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/MerchantAddress'
+
+    MerchantAddressListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MerchantAddress'
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+        - timestamp
+      properties:
+        code:
+          type: string
+          example: PRODUCT_NOT_FOUND
+        message:
+          type: string
+          example: Product not found
+        timestamp:
+          type: string
+          format: date-time
+          example: 2026-03-28T12:00:00Z
+        details:
+          type: array
+          items:
+            type: string
+          example:
+            - productId 999 does not exist
