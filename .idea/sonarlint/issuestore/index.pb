@@ -235,3 +235,5 @@ w
 Gsrc/main/java/th/co/carbonedge/api/specification/CartSpecification.java,0/b/0b773c66f2a484a0c5e3eb4ef31ea1bfef86652f
 q
 Asrc/main/java/th/co/carbonedge/api/repository/CartRepository.java,b/8/b85b8681614fed6b4d1cbb0ec5271a4d83dd4c84
+9
+	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
