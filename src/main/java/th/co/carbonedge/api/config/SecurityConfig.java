@@ -45,10 +45,10 @@ public class SecurityConfig {
                         "/v3/api-docs/**",
                         "/h2-console/**"
                 ).permitAll()
+                .requestMatchers(HttpMethod.POST, "/v1/customers").permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/categories").permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/products").permitAll()
                 .requestMatchers(HttpMethod.POST, "/v1/auth/login", "/v1/auth/refresh-access-token").permitAll()
-                .requestMatchers(HttpMethod.POST, "/v1/customers").permitAll()
                 .anyRequest()
                 .authenticated()
             );
