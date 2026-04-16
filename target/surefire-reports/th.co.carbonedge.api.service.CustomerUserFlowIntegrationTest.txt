@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: th.co.carbonedge.api.service.CustomerUserFlowIntegrationTest
 -------------------------------------------------------------------------------
-Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.438 s -- in th.co.carbonedge.api.service.CustomerUserFlowIntegrationTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.435 s -- in th.co.carbonedge.api.service.CustomerUserFlowIntegrationTest

@@ -29,6 +29,7 @@ import th.co.carbonedge.api.service.AuthTokenService;
 public class AccessTokenAuthenticationFilter extends OncePerRequestFilter {
 
     private static final RequestMatcher PUBLIC_ENDPOINTS = new OrRequestMatcher(
+        new AntPathRequestMatcher("/v1/customers", HttpMethod.POST.name()),
         new AntPathRequestMatcher("/v1/categories", HttpMethod.GET.name()),
         new AntPathRequestMatcher("/v1/products", HttpMethod.GET.name()),
         new AntPathRequestMatcher("/v1/auth/login", HttpMethod.POST.name()),

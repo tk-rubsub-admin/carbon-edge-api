@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: th.co.carbonedge.api.controller.wishlist.WishlistControllerIntegrationTest
 -------------------------------------------------------------------------------
-Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.600 s -- in th.co.carbonedge.api.controller.wishlist.WishlistControllerIntegrationTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.591 s -- in th.co.carbonedge.api.controller.wishlist.WishlistControllerIntegrationTest

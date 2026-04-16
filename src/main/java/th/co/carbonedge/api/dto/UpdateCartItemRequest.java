@@ -18,7 +18,7 @@ import jakarta.annotation.Generated;
  * UpdateCartItemRequest
  */
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-04-15T22:52:19.015873+07:00[Asia/Bangkok]", comments = "Generator version: 7.8.0")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-04-16T22:01:36.911071+07:00[Asia/Bangkok]", comments = "Generator version: 7.8.0")
 public class UpdateCartItemRequest implements Serializable {
 
   private static final long serialVersionUID = 1L;
